@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* 웜 뉴트럴 다크 (Caviar · Rein · Shadow · Mustang 계열) */
+    --coot-bg: #010101;
+    --coot-surface: #171414;
+    --coot-surface-2: #211d1d;
+    --coot-border: #312e2e;
+    --coot-border-strong: #4e4949;
+    --coot-text: #f3efea;
+    --coot-muted: #a8a19d;
+    --coot-muted-2: #7d7d7d;
+    --coot-accent: #c8b38f;
+    --coot-accent-muted: #9a928a;
+    --coot-on-accent: #151311;
+  }
+
+  html {
+    color-scheme: dark;
+    min-height: 100%;
+    background-color: var(--coot-bg);
+  }
+
+  /* @apply 커스텀 색상(bg-coot-bg 등)은 PostCSS 순서 이슈로 500이 날 수 있어 순수 CSS 사용 */
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    background-color: var(--coot-bg);
+    color: var(--coot-text);
+    font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer utilities {
+  .mascot-near {
+    transition:
+      transform 0.35s ease,
+      box-shadow 0.35s ease;
+    transform: scale(1.04);
+    box-shadow: 0 0 0 2px rgba(200, 179, 143, 0.4);
+  }
+}
