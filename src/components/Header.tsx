@@ -1,7 +1,6 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
+import { AuthHeader } from "@/components/AuthHeader";
 import { COOT_HEADER_LOGO } from "@/lib/coot-brand";
 
 export function Header() {
@@ -21,7 +20,12 @@ export function Header() {
           <span className="text-lg font-extrabold tracking-tight text-coot-accent sm:text-xl">COOT Ai</span>
           <span className="hidden text-sm font-medium text-coot-muted sm:inline">· AI 바로가기</span>
         </Link>
-        <p className="truncate text-xs text-coot-muted sm:text-sm">카테고리·링크는 이 브라우저에 저장됩니다</p>
+        <div className="flex min-w-0 flex-1 items-center justify-end gap-2 sm:gap-3">
+          <p className="hidden truncate text-xs text-coot-muted md:inline md:max-w-[14rem] lg:max-w-none lg:text-sm">
+            로그인 시 클라우드에도 동기화됩니다
+          </p>
+          <AuthHeader />
+        </div>
       </div>
     </header>
   );

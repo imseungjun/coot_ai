@@ -1,3 +1,14 @@
+import type { HubState } from "./hub-types";
+
+export function normalizeHubState(state: HubState): HubState {
+  return {
+    version: 1,
+    categories: [...state.categories]
+      .sort((a, b) => a.order - b.order)
+      .map((c, i) => ({ ...c, order: i })),
+  };
+}
+
 export function normalizeUrl(input: string): string {
   const trimmed = input.trim();
   if (!trimmed) return "";

@@ -3,7 +3,6 @@
 import {
   useCallback,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -26,7 +25,10 @@ import {
   serializeHubState,
 } from "@/lib/hub-storage";
 import type { HubCategory, HubLink, HubState } from "@/lib/hub-types";
-import { newId } from "@/lib/hub-utils";
+import { pushHubStateRemote } from "@/lib/hub-cloud";
+import { normalizeHubState, newId } from "@/lib/hub-utils";
+import { createClient } from "@/lib/supabase/client";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { CategoryModal } from "./CategoryModal";
 import { HubCategorySection } from "./HubCategorySection";
 import { ServiceModal } from "./ServiceModal";
@@ -46,9 +48,9 @@ export function HubDashboard() {
   const [serviceModalOpen, setServiceModalOpen] = useState(false);
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const [editingLink, setEditingLink] = useState<HubLink | null>(null);
+  const [cloudLoggedIn, setCloudLoggedIn] = useState(false);
 
-  /** hydration 직후: 로드 + 저장소 전체 스캔 병합(분실 링크 최대 복구) */
-  useLayoutEffect(() => {
+  function loadLocalRecoveryIntoState() {
     const fromLoader = loadHubState();
     const deep = deepRecoverHubState();
     const empty: HubState = { version: 1, categories: [] };
@@ -65,7 +67,82 @@ export function HubDashboard() {
       setState(deep);
       saveHubState(deep);
     }
-    storageReadyRef.current = true;
+  }
+
+  /** 첫 로드: Supabase 로그인 시 서버 허브 우선, 아니면 로컬 복구 */
+  useEffect(() => {
+    let cancelled = false;
+
+    async function init() {
+      if (!isSupabaseConfigured()) {
+        loadLocalRecoveryIntoState();
+        storageReadyRef.current = true;
+        return;
+      }
+
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (cancelled) return;
+      setCloudLoggedIn(!!session?.user);
+
+      if (session?.user) {
+        const res = await fetch("/api/hub-state");
+        if (cancelled) return;
+        if (!res.ok) {
+          loadLocalRecoveryIntoState();
+          storageReadyRef.current = true;
+          return;
+        }
+        const json = (await res.json()) as { state: HubState | null };
+        const remote = json.state;
+        const fromLoader = loadHubState();
+        const deep = deepRecoverHubState();
+        const empty: HubState = { version: 1, categories: [] };
+        const localBest = (() => {
+          const base = fromLoader ?? empty;
+          if (deep && countHubLinks(deep) > countHubLinks(base)) return deep;
+          return fromLoader ?? base;
+        })();
+        const localCount = countHubLinks(localBest);
+        const hasRemote =
+          remote && Array.isArray(remote.categories) && remote.categories.length > 0;
+
+        if (hasRemote) {
+          const sorted = normalizeHubState(remote!);
+          setState(sorted);
+          saveHubState(sorted);
+        } else if (localCount > 0) {
+          const sorted = normalizeHubState(localBest);
+          setState(sorted);
+          saveHubState(sorted);
+          await pushHubStateRemote(sorted);
+        } else {
+          loadLocalRecoveryIntoState();
+        }
+      } else {
+        loadLocalRecoveryIntoState();
+      }
+      storageReadyRef.current = true;
+    }
+
+    void init();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured()) return;
+    const supabase = createClient();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setCloudLoggedIn(!!session?.user);
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   stateRef.current = state;
@@ -75,10 +152,12 @@ export function HubDashboard() {
     function onHidden() {
       if (document.visibilityState === "hidden") {
         flushHubState(stateRef.current);
+        void pushHubStateRemote(stateRef.current);
       }
     }
     function onPageHide() {
       flushHubState(stateRef.current);
+      void pushHubStateRemote(stateRef.current);
     }
     document.addEventListener("visibilitychange", onHidden);
     window.addEventListener("pagehide", onPageHide);
@@ -113,6 +192,7 @@ export function HubDashboard() {
           .map((c, i) => ({ ...c, order: i })),
       };
       saveHubState(sorted);
+      void pushHubStateRemote(sorted);
       return sorted;
     });
   }, []);
@@ -273,6 +353,7 @@ export function HubDashboard() {
     const fresh = createDefaultHubState();
     setState(fresh);
     saveHubState(fresh);
+    void pushHubStateRemote(fresh);
   }
 
   function downloadBackup() {
@@ -309,6 +390,7 @@ export function HubDashboard() {
       };
       setState(sorted);
       saveHubState(sorted);
+      void pushHubStateRemote(sorted);
     };
     reader.readAsText(file, "utf-8");
   }
@@ -341,6 +423,7 @@ export function HubDashboard() {
       };
       setState(sorted);
       saveHubState(sorted);
+      void pushHubStateRemote(sorted);
     };
     reader.readAsText(file, "utf-8");
   }
@@ -364,6 +447,7 @@ export function HubDashboard() {
     }
     setState(deep);
     saveHubState(deep);
+    void pushHubStateRemote(deep);
   }
 
   return (
@@ -380,7 +464,10 @@ export function HubDashboard() {
           </p>
           {lastSavedAt ? (
             <p className="mt-1.5 text-xs text-coot-muted-2">
-              마지막 반영: {lastSavedAt} · localStorage + 세션 미러
+              마지막 반영: {lastSavedAt} ·{" "}
+              {isSupabaseConfigured() && cloudLoggedIn
+                ? "이 브라우저 + 서버(계정 동기화)"
+                : "이 브라우저 저장소"}
             </p>
           ) : null}
         </div>
