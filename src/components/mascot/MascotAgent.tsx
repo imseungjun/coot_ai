@@ -5,6 +5,7 @@ import { COOT_MASCOT_CHARACTER } from "@/lib/coot-brand";
 import {
   MASCOT_BODY_H,
   MASCOT_BODY_W,
+  MASCOT_CONTAINER_H,
   MASCOT_RAIL_BOTTOM_PX,
   MASCOT_STORAGE_DISABLED,
 } from "./mascot-types";
@@ -39,7 +40,7 @@ export function MascotAgent({ paused = false }: MascotAgentProps) {
     });
   }, []);
 
-  const { x, facing, mode, reduced } = useMascotBehavior({
+  const { x, y, facing, mode, reduced } = useMascotBehavior({
     paused,
     enabled: showMascot,
   });
@@ -47,9 +48,7 @@ export function MascotAgent({ paused = false }: MascotAgentProps) {
   const motionOk = showMascot && !reduced && !paused;
   const staticX = 8;
   const displayX = reduced && showMascot ? staticX : x;
-
-  /** 이미지 높이 + 그림자 영역(기존 대비 절반 스케일) */
-  const containerH = MASCOT_BODY_H + 9;
+  const displayY = reduced && showMascot ? undefined : y;
 
   if (!showMascot) {
     return (
@@ -67,12 +66,14 @@ export function MascotAgent({ paused = false }: MascotAgentProps) {
 
   return (
     <div
-      className="pointer-events-none fixed z-40 select-none"
+      className="pointer-events-none fixed z-40 select-none will-change-transform"
       style={{
         left: displayX,
-        bottom: MASCOT_RAIL_BOTTOM_PX,
+        ...(displayY !== undefined
+          ? { top: displayY, bottom: "auto" }
+          : { bottom: MASCOT_RAIL_BOTTOM_PX, top: "auto" }),
         width: MASCOT_BODY_W,
-        height: containerH,
+        height: MASCOT_CONTAINER_H,
       }}
       aria-hidden
     >

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { getTopLinkIdsForMascot } from "@/lib/mascot-link-clicks";
-import { MASCOT_BODY_W, type MascotMode } from "./mascot-types";
+import { MASCOT_CONTAINER_H, MASCOT_BODY_W, type MascotMode } from "./mascot-types";
 
 const HIT_W = MASCOT_BODY_W;
 
@@ -33,6 +33,12 @@ function escapeAttrSelector(value: string) {
   return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }
 
+function initialY(): number {
+  if (typeof window === "undefined") return 400;
+  const pad = 8;
+  return Math.max(pad, window.innerHeight - MASCOT_CONTAINER_H - 20);
+}
+
 type Options = {
   paused: boolean;
   enabled: boolean;
@@ -44,37 +50,52 @@ export function useMascotBehavior({ paused, enabled }: Options) {
   pausedRef.current = paused;
 
   const xRef = useRef(12);
+  const yRef = useRef(initialY());
   const [x, setX] = useState(12);
+  const [y, setY] = useState(() => initialY());
   const [facing, setFacing] = useState(1);
   const [mode, setMode] = useState<MascotMode>("idle");
   const [inspectLinkId, setInspectLinkId] = useState<string | null>(null);
-  /** 1·2·3순위(클릭 많은 링크)를 순서대로 돌며 방문 */
   const topVisitCycleRef = useRef(0);
 
+  const bounds = useCallback(() => {
+    const pad = 8;
+    const vh = window.innerHeight;
+    const vw = window.innerWidth;
+    const maxX = Math.max(pad, vw - HIT_W - pad);
+    const maxY = Math.max(pad, vh - MASCOT_CONTAINER_H - pad);
+    return { minX: pad, maxX, minY: pad, maxY };
+  }, []);
+
   const syncX = useCallback((nx: number) => {
-    const padX = 8;
-    const maxX = Math.max(padX, window.innerWidth - HIT_W - padX);
-    const cx = clamp(nx, padX, maxX);
+    const { minX, maxX } = bounds();
+    const cx = clamp(nx, minX, maxX);
     xRef.current = cx;
     setX(cx);
-  }, []);
+  }, [bounds]);
 
-  const boundsX = useCallback(() => {
-    const padX = 8;
-    const maxX = Math.max(padX, window.innerWidth - HIT_W - padX);
-    return { minX: padX, maxX };
-  }, []);
+  const syncY = useCallback((ny: number) => {
+    const { minY, maxY } = bounds();
+    const cy = clamp(ny, minY, maxY);
+    yRef.current = cy;
+    setY(cy);
+  }, [bounds]);
 
-  const randomTargetX = useCallback(() => {
-    const { minX, maxX } = boundsX();
-    return randomInRange(minX, maxX);
-  }, [boundsX]);
+  const randomTargetPose = useCallback(() => {
+    const { minX, maxX, minY, maxY } = bounds();
+    return {
+      x: randomInRange(minX, maxX),
+      y: randomInRange(minY, maxY),
+    };
+  }, [bounds]);
 
-  const animateToX = useCallback(
-    (targetX: number, durationMs: number) => {
-      const { minX, maxX } = boundsX();
-      const to = clamp(targetX, minX, maxX);
-      const from = xRef.current;
+  const animateToPose = useCallback(
+    (targetX: number, targetY: number, durationMs: number) => {
+      const { minX, maxX, minY, maxY } = bounds();
+      const toX = clamp(targetX, minX, maxX);
+      const toY = clamp(targetY, minY, maxY);
+      const fromX = xRef.current;
+      const fromY = yRef.current;
       const start = performance.now();
 
       return new Promise<void>((resolve) => {
@@ -85,7 +106,8 @@ export function useMascotBehavior({ paused, enabled }: Options) {
           }
           const t = Math.min(1, (now - start) / durationMs);
           const ease = 1 - (1 - t) ** 2;
-          syncX(from + (to - from) * ease);
+          syncX(fromX + (toX - fromX) * ease);
+          syncY(fromY + (toY - fromY) * ease);
           if (t < 1) {
             requestAnimationFrame(frame);
           } else {
@@ -95,15 +117,17 @@ export function useMascotBehavior({ paused, enabled }: Options) {
         requestAnimationFrame(frame);
       });
     },
-    [boundsX, enabled, syncX],
+    [bounds, enabled, syncX, syncY],
   );
 
-  const pointNearLinkX = useCallback(() => {
+  const pointNearLink = useCallback(() => {
     const nodes = document.querySelectorAll<HTMLElement>('[data-mascot-anchor="link"]');
-    if (nodes.length === 0) return { x: randomTargetX(), linkId: null as string | null };
+    if (nodes.length === 0) {
+      const p = randomTargetPose();
+      return { x: p.x, y: p.y, linkId: null as string | null };
+    }
 
-    const top = getTopLinkIdsForMascot(5);
-    /** 클릭 많은 순·기본(ChatGPT·Gemini·힉스필드) 순으로 순환, 가끔 아무 타일 */
+    const top = getTopLinkIdsForMascot(6);
     const useFavorite = Math.random() < 0.9;
 
     let el: HTMLElement | null = null;
@@ -126,10 +150,17 @@ export function useMascotBehavior({ paused, enabled }: Options) {
 
     const r = el.getBoundingClientRect();
     const side = Math.random() > 0.5 ? -1 : 1;
-    const { minX, maxX } = boundsX();
-    const raw = r.left + r.width / 2 - HIT_W / 2 + side * randomInRange(18, 40);
-    return { x: clamp(raw, minX, maxX), linkId };
-  }, [boundsX, randomTargetX]);
+    const { minX, maxX, minY, maxY } = bounds();
+    const linkCx = r.left + r.width / 2;
+    const linkCy = r.top + r.height / 2;
+    const rawX = linkCx - HIT_W / 2 + side * randomInRange(18, 40);
+    const rawY = linkCy - MASCOT_CONTAINER_H / 2 + randomInRange(-14, 14);
+    return {
+      x: clamp(rawX, minX, maxX),
+      y: clamp(rawY, minY, maxY),
+      linkId,
+    };
+  }, [bounds, randomTargetPose]);
 
   useEffect(() => {
     if (!enabled || reduced || paused) return;
@@ -143,7 +174,6 @@ export function useMascotBehavior({ paused, enabled }: Options) {
           continue;
         }
 
-        // 첫 사이클은 짧게: 곧 걷기·점프가 보이도록 (이후는 여유 있게)
         await new Promise((r) =>
           setTimeout(r, first ? randomInRange(900, 1800) : randomInRange(2400, 5200)),
         );
@@ -153,12 +183,12 @@ export function useMascotBehavior({ paused, enabled }: Options) {
         const mobile = window.matchMedia("(max-width: 640px)").matches;
         const r = Math.random();
 
-        /* 무작위 좌우는 소수만 — 대부분 인기 링크(클릭 상위 + 기본 GPT·제미나이·힉스필드) 근처 왕복 */
-        if (r < 0.07) {
-          const tx = randomTargetX();
+        /* 뷰포트 아무 곳이나 배회 */
+        if (r < 0.14) {
+          const { x: tx, y: ty } = randomTargetPose();
           setFacing(tx < xRef.current ? -1 : 1);
           setMode("walk");
-          await animateToX(tx, mobile ? randomInRange(900, 1500) : randomInRange(1100, 2000));
+          await animateToPose(tx, ty, mobile ? randomInRange(900, 1500) : randomInRange(1100, 2000));
           if (cancelled) break;
           if (Math.random() < 0.45) {
             setMode("jump");
@@ -169,11 +199,11 @@ export function useMascotBehavior({ paused, enabled }: Options) {
           continue;
         }
 
-        if (r < 0.94) {
-          const { x: tx, linkId } = pointNearLinkX();
+        if (r < 0.93) {
+          const { x: tx, y: ty, linkId } = pointNearLink();
           setFacing(tx < xRef.current ? -1 : 1);
           setMode("walk");
-          await animateToX(tx, mobile ? randomInRange(1000, 1600) : randomInRange(1200, 2200));
+          await animateToPose(tx, ty, mobile ? randomInRange(1000, 1600) : randomInRange(1200, 2200));
           if (cancelled) break;
           setMode("jump");
           await new Promise((res) => setTimeout(res, mobile ? 420 : 500));
@@ -195,15 +225,16 @@ export function useMascotBehavior({ paused, enabled }: Options) {
     return () => {
       cancelled = true;
     };
-  }, [enabled, reduced, paused, animateToX, pointNearLinkX, randomTargetX]);
+  }, [enabled, reduced, paused, animateToPose, pointNearLink, randomTargetPose]);
 
   useEffect(() => {
     function onResize() {
       syncX(xRef.current);
+      syncY(yRef.current);
     }
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
-  }, [syncX]);
+  }, [syncX, syncY]);
 
   useEffect(() => {
     if (!inspectLinkId) return;
@@ -217,6 +248,7 @@ export function useMascotBehavior({ paused, enabled }: Options) {
 
   return {
     x,
+    y,
     facing,
     mode,
     reduced,
