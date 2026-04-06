@@ -27,6 +27,8 @@ Next.js 기반 로컬·웹 바로가기 허브입니다.
 
 ### 3) Supabase로 회원가입·데이터 동기화 (선택이지만 권장)
 
+**Vercel에 올린 뒤 로그인까지 쓰려면** 반드시 [docs/Vercel-로그인-Supabase.md](docs/Vercel-로그인-Supabase.md) 순서(환경 변수 + Supabase Redirect URL)를 따라주세요.
+
 1. [Supabase](https://supabase.com/)에서 새 프로젝트를 만듭니다.
 2. **Project Settings → API**에서 `Project URL`과 `anon public` 키를 복사합니다.
 3. 로컬에 `.env.local` 파일을 만들고 다음을 넣습니다.
