@@ -20,9 +20,9 @@ export function Header() {
           <span className="text-lg font-extrabold tracking-tight text-coot-accent sm:text-xl">COOT Ai</span>
           <span className="hidden text-sm font-medium text-coot-muted sm:inline">· AI 바로가기</span>
         </Link>
-        <div className="flex min-w-0 flex-1 items-center justify-end gap-2 sm:gap-3">
-          <p className="hidden truncate text-xs text-coot-muted md:inline md:max-w-[14rem] lg:max-w-none lg:text-sm">
-            로그인 시 클라우드에도 동기화됩니다
+        <div className="flex min-w-0 flex-1 items-center justify-end gap-3 sm:gap-4">
+          <p className="hidden text-right text-[11px] leading-snug text-coot-muted xl:block xl:max-w-[14rem]">
+            로그인 시 계정에 저장 · 다른 기기에서 이어 사용
           </p>
           <AuthHeader />
         </div>

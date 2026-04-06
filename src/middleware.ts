@@ -32,6 +32,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    /* _next 전체 제외: CSS/JS 청크·HMR 등에 미들웨어가 끼어들지 않게 함. api는 세션 갱신을 위해 포함 */
+    "/((?!_next/|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff2?)$).*)",
   ],
 };

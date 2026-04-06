@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
-import { Header } from "@/components/Header";
+import { AuthRouteHeader } from "@/components/AuthRouteHeader";
 import "./globals.css";
 
 const inter = Inter({
@@ -49,10 +49,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className={`${inter.variable} min-h-full bg-coot-bg`} style={{ backgroundColor: "#010101" }}>
-      <body className="flex min-h-dvh flex-col bg-coot-bg font-sans text-coot-text antialiased">
-        <Header />
-        <main className="min-h-0 flex-1">{children}</main>
+    <html
+      lang="ko"
+      className={`${inter.variable} min-h-full bg-coot-bg`}
+      style={{ backgroundColor: "#010101", color: "#f3efea" }}
+    >
+      <body
+        className="flex min-h-dvh flex-col bg-coot-bg font-sans text-coot-text antialiased"
+        style={{ backgroundColor: "#010101", color: "#f3efea" }}
+      >
+        <AuthRouteHeader />
+        <main className="min-h-0 w-full min-w-0 flex-1 self-stretch overflow-x-hidden">{children}</main>
       </body>
     </html>
   );

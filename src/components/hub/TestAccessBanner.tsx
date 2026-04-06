@@ -21,7 +21,7 @@ export function TestAccessBanner() {
     }
   }
 
-  const samples = ["http://localhost:3000/", "http://127.0.0.1:3000/"];
+  const samples = ["http://localhost:3000/"];
 
   return (
     <div className="mt-14 rounded-2xl border border-coot-border/80 bg-coot-surface/30">
@@ -44,13 +44,9 @@ export function TestAccessBanner() {
         <div className="border-t border-coot-border/60 px-4 pb-4 pt-2 sm:px-5 sm:pb-5">
           <p className="text-xs text-coot-muted">
             데이터는 이 브라우저 localStorage에 저장됩니다.{" "}
-            <strong className="font-medium text-coot-text">
-              항상 같은 주소(호스트·포트)로 접속하세요
-            </strong>
-            — <code className="rounded bg-coot-bg px-1">:3000</code>과{" "}
-            <code className="rounded bg-coot-bg px-1">:3001</code>도 저장소가 완전히 다릅니다.{" "}
-            <code className="rounded bg-coot-bg px-1">localhost</code>와{" "}
-            <code className="rounded bg-coot-bg px-1">127.0.0.1</code>도 마찬가지입니다.
+            <strong className="font-medium text-coot-text">개발 시에는 http://localhost:3000 만 쓰세요</strong>
+            . 포트가 다르거나 <code className="rounded bg-coot-bg px-1">127.0.0.1</code>이면 브라우저가 다른
+            사이트로 보아 저장 목록이 갈라질 수 있습니다.
           </p>
           <ul className="mt-3 space-y-2 text-sm">
             <li className="flex flex-wrap items-center gap-2">

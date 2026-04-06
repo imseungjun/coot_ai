@@ -1,5 +1,9 @@
 import { HubDashboard } from "@/components/hub/HubDashboard";
 
 export default function HubPage() {
-  return <HubDashboard />;
+  return (
+    <div className="relative w-full min-w-0 max-w-none">
+      <HubDashboard />
+    </div>
+  );
 }

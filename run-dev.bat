@@ -8,7 +8,7 @@ echo.
 echo [안내] 브라우저는 서버가 준비되면 AI 바로가기(/)가 자동으로 열립니다.
 echo        안 열리면 서버가 Ready 된 뒤 open-home.bat 더블클릭 또는 주소 직접 입력.
 echo        스타일 깨짐·무한 로딩 시: run-dev-clean.bat (포트 정리 + .next 삭제)
-echo        EADDRINUSE 시 3001번으로 자동 전환합니다.
+echo        표준 주소: http://localhost:3000/  (3000 사용 중이면 종료 후 다시 실행)
 echo        수동 종료: kill-port-3000.bat  /  여러 포트: kill-dev-ports.bat
 echo.
 
@@ -27,15 +27,15 @@ echo.
 
 netstat -ano 2>nul | findstr ":3000" | findstr "LISTENING" >nul 2>&1
 if %errorlevel%==0 (
-  echo [자동] 포트 3000 사용 중 → 3001 로 띄웁니다.
-  echo        주소: http://127.0.0.1:3001/
-  echo.
-  call npm run dev:open:3001
-) else (
-  echo        주소: http://127.0.0.1:3000/
-  echo.
-  call npm run dev:open
+  echo [오류] 포트 3000이 이미 사용 중입니다.
+  echo        run-dev-clean.bat 로 정리하거나 kill-port-3000.bat 로 종료한 뒤 다시 실행하세요.
+  echo        이 프로젝트는 http://localhost:3000 만 개발 기준으로 사용합니다.
+  pause
+  exit /b 1
 )
+echo        주소: http://localhost:3000/
+echo.
+call npm run dev
 
 echo.
 echo 서버가 종료되었습니다.

@@ -1,5 +1,17 @@
 import { normalizeUrl } from "./hub-utils";
 
+/** 검색 결과 페이지 URL인지 (썸네일은 별도 API로 첫 동영상 ID 추정) */
+export function isYouTubeSearchUrl(url: string): boolean {
+  try {
+    const u = new URL(normalizeUrl(url));
+    return (
+      /youtube\.com$/i.test(u.hostname.replace(/^www\./i, "")) && u.pathname.startsWith("/results")
+    );
+  } catch {
+    return false;
+  }
+}
+
 /** YouTube 동영상 ID 추출 (watch, shorts, embed, youtu.be) */
 export function parseYouTubeVideoId(input: string): string | null {
   const raw = normalizeUrl(input).trim();
@@ -42,5 +54,7 @@ export function youtubeThumbnailCandidates(videoId: string): string[] {
     `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
     `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
     `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
+    `https://img.youtube.com/vi/${videoId}/sddefault.jpg`,
+    `https://img.youtube.com/vi/${videoId}/default.jpg`,
   ];
 }

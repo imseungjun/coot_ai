@@ -1,0 +1,18 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "COOT Ai: Next.js 개발 서버 (Node)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev:no-open"
+    },
+    {
+      "name": "COOT Ai: Chrome으로 localhost:3000 열기",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:3000/",
+      "webRoot": "${workspaceFolder}"
+    }
+  ]
+}

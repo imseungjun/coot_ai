@@ -7,7 +7,7 @@ echo ========================================
 echo.
 echo [안내] 스타일이 안 붙거나 로딩만 도는 경우 이 배치를 사용하세요.
 echo        브라우저가 자동으로 안 열리면: open-home.bat 또는 주소창에 직접 입력.
-echo        브라우저: http://127.0.0.1:3000/
+echo        브라우저: http://localhost:3000/
 echo.
 
 if not exist "node_modules\" (
@@ -41,7 +41,7 @@ if exist ".next\" (
 
 echo [3/3] 개발 서버 시작 — 준비되면 AI 바로가기(/)가 열립니다...
 echo.
-call npm run dev:open
+call npm run dev
 
 echo.
 echo 서버가 종료되었습니다.

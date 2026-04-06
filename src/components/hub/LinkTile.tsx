@@ -17,6 +17,10 @@ export function LinkTile({ link, onEdit, onDelete, onReorderUp, onReorderDown }:
   const [imgOk, setImgOk] = useState(true);
   const iconSrc =
     link.iconUrl && link.iconUrl.length > 0 ? link.iconUrl : faviconUrlForPage(link.url);
+  const iconImgClass =
+    link.iconUrl && link.iconUrl.length > 0
+      ? "h-9 w-9 object-contain sm:h-10 sm:w-10"
+      : "h-8 w-8 object-contain sm:h-9 sm:w-9";
   const initial = link.name.trim().charAt(0).toUpperCase() || "?";
   const href = normalizeUrl(link.url);
   const internal = href.startsWith("/");
@@ -27,7 +31,7 @@ export function LinkTile({ link, onEdit, onDelete, onReorderUp, onReorderDown }:
 
   return (
     <div
-      className="group relative flex min-h-[8.5rem] flex-col sm:min-h-[9rem]"
+      className="hub-link-tile group relative flex min-h-[8.5rem] flex-col pt-6 sm:min-h-[9rem] sm:pt-7"
       data-mascot-anchor="link"
       data-mascot-link-id={link.id}
     >
@@ -43,7 +47,7 @@ export function LinkTile({ link, onEdit, onDelete, onReorderUp, onReorderDown }:
           if (!href) e.preventDefault();
           else recordMascotLinkClick(link.id);
         }}
-        className="flex flex-1 flex-col items-center gap-2 rounded-2xl border border-transparent p-3 pb-2 pl-6 transition-colors hover:border-coot-border hover:bg-white/[0.04] sm:pl-7"
+        className="flex flex-1 flex-col items-center gap-2 rounded-2xl border border-transparent px-3 pb-2 pt-1 text-center text-coot-text no-underline transition-colors hover:border-coot-border hover:bg-white/[0.04]"
       >
         <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-sm sm:h-14 sm:w-14">
           {iconSrc && imgOk ? (
@@ -52,7 +56,7 @@ export function LinkTile({ link, onEdit, onDelete, onReorderUp, onReorderDown }:
               src={iconSrc}
               alt=""
               draggable={false}
-              className="h-8 w-8 object-contain sm:h-9 sm:w-9"
+              className={iconImgClass}
               onError={() => setImgOk(false)}
             />
           ) : (
@@ -66,7 +70,7 @@ export function LinkTile({ link, onEdit, onDelete, onReorderUp, onReorderDown }:
 
       <details className="absolute right-0 top-0 z-30">
         <summary
-          className="list-none flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-coot-bg/95 text-coot-muted ring-1 ring-coot-border opacity-90 transition-opacity hover:text-coot-text sm:opacity-0 sm:group-hover:opacity-100 [&::-webkit-details-marker]:hidden"
+          className="list-none flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-coot-bg/95 text-coot-muted ring-1 ring-coot-border opacity-95 transition-opacity hover:text-coot-text [&::-webkit-details-marker]:hidden"
           aria-label="링크 메뉴"
         >
           ⋮

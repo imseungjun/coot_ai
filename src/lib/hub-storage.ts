@@ -62,7 +62,7 @@ function writeMirror(json: string): void {
 
 /**
  * 바로가기 전체 상태 저장. localStorage + sessionStorage 동시 기록(한쪽 실패 시 다른 쪽 보조).
- * 탭을 닫기 직전 `flushHubState`로 한 번 더 호출하면 유실을 줄일 수 있습니다.
+ * HubDashboard에서 `state` 변경 시·탭 숨김·beforeunload·주기 스냅샷으로 자동 호출됩니다.
  */
 export function saveHubState(state: HubState): boolean {
   if (typeof window === "undefined") return false;

@@ -24,12 +24,12 @@ if errorlevel 1 (
 )
 
 echo [2/2] 서버 시작 — 준비되면 브라우저가 AI 바로가기(/) 로 열립니다...
-echo   http://127.0.0.1:3000/
+echo   http://localhost:3000/
 echo 종료: Ctrl+C
 echo ========================================
 
 REM 현재 폴더가 프로젝트 루트인 상태에서 대기 스크립트 실행 (별도 창)
-start "COOT-wait-open" cmd /c "node scripts\wait-and-open.mjs --port=3000 --path=/"
+start "COOT-wait-open" cmd /c "node scripts\wait-and-open.mjs --port=3000 --path=/ --immediate"
 
 call npm run start
 pause

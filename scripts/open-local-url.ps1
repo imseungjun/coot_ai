@@ -13,7 +13,7 @@ foreach ($port in $Ports) {
     $iar = $client.BeginConnect("127.0.0.1", $port, $null, $null)
     $ok = $iar.AsyncWaitHandle.WaitOne(600, $false)
     if ($ok -and $client.Connected) {
-      $uri = "http://127.0.0.1:${port}${Path}"
+      $uri = "http://localhost:${port}${Path}"
       Write-Host "Opening $uri"
       Start-Process $uri
       exit 0
@@ -25,6 +25,6 @@ foreach ($port in $Ports) {
   }
 }
 
-$fallback = "http://127.0.0.1:3000${Path}"
+$fallback = "http://localhost:3000${Path}"
 Write-Host "No TCP listener on ports $($Ports -join ', '). Opening fallback: $fallback"
 Start-Process $fallback

@@ -9,21 +9,24 @@ import { execSync } from "node:child_process";
 function parseArgs() {
   let port = Number(process.env.PORT) || 3000;
   let openPath = process.env.OPEN_PATH || "/create";
+  let immediate = false;
   for (const a of process.argv.slice(2)) {
     if (a.startsWith("--port=")) port = Number(a.slice(7)) || port;
     if (a.startsWith("--path=")) openPath = a.slice(7) || openPath;
+    if (a === "--immediate") immediate = true;
   }
   if (!openPath.startsWith("/")) openPath = `/${openPath}`;
-  return { port, openPath };
+  return { port, openPath, immediate };
 }
 
-const { port: PORT, openPath: OPEN_PATH } = parseArgs();
-const HOST = "127.0.0.1";
+const { port: PORT, openPath: OPEN_PATH, immediate: OPEN_IMMEDIATE } = parseArgs();
+/** 브라우저·localStorage 기준을 localhost:3000 으로 통일 (127.0.0.1 과는 다른 출처로 취급될 수 있음) */
+const HOST = "localhost";
 const BASE = `http://${HOST}:${PORT}`;
 const READY_URL = `${BASE}/`;
 const OPEN_URL = `${BASE}${OPEN_PATH}`;
-const MAX_ATTEMPTS = 180;
-const INTERVAL_MS = 1000;
+const MAX_ATTEMPTS = 600;
+const INTERVAL_MS = 200;
 
 function probe(url) {
   return new Promise((resolve) => {
@@ -55,15 +58,27 @@ function openBrowser(url) {
 }
 
 async function main() {
+  if (OPEN_IMMEDIATE) {
+    try {
+      openBrowser(OPEN_URL);
+      console.log("COOT Ai: 브라우저를 바로 열었습니다. 연결이 안 되면 잠시 후 새로고침하세요.");
+    } catch (e) {
+      console.warn("COOT Ai: 브라우저 자동 실행 실패. 직접 여세요: %s", OPEN_URL, e);
+    }
+  }
   console.log("COOT Ai: 서버 준비 대기 중… (응답 확인: %s)", READY_URL);
   console.log("COOT Ai: 브라우저로 열 주소: %s", OPEN_URL);
   for (let i = 0; i < MAX_ATTEMPTS; i++) {
     if (await probe(READY_URL)) {
-      try {
-        openBrowser(OPEN_URL);
-        console.log("COOT Ai: 브라우저를 열었습니다.");
-      } catch (e) {
-        console.warn("COOT Ai: 브라우저 자동 실행 실패. 직접 여세요: %s", OPEN_URL, e);
+      if (!OPEN_IMMEDIATE) {
+        try {
+          openBrowser(OPEN_URL);
+          console.log("COOT Ai: 브라우저를 열었습니다.");
+        } catch (e) {
+          console.warn("COOT Ai: 브라우저 자동 실행 실패. 직접 여세요: %s", OPEN_URL, e);
+        }
+      } else {
+        console.log("COOT Ai: 서버가 준비되었습니다. 브라우저에서 새로고침(F5)하면 바로 보입니다.");
       }
       process.exit(0);
       return;
