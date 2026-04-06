@@ -44,6 +44,7 @@ import {
 } from "@/lib/hub-canonical";
 import { CategoryModal } from "./CategoryModal";
 import { HubCategorySection } from "./HubCategorySection";
+import { HubHeroBanner } from "./HubHeroBanner";
 import { ServiceModal } from "./ServiceModal";
 import { StorageOriginNotice } from "./StorageOriginNotice";
 import { TestAccessBanner } from "./TestAccessBanner";
@@ -696,7 +697,8 @@ export function HubDashboard() {
         </div>
       ) : null}
 
-      <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <HubHeroBanner>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">AI 바로가기</h1>
           <p className="mt-2 max-w-xl text-coot-muted">
@@ -816,7 +818,8 @@ export function HubDashboard() {
             초기화
           </button>
         </div>
-      </div>
+        </div>
+      </HubHeroBanner>
 
       {sortedCategories.length === 0 ? (
         <div className="mb-10 rounded-2xl border border-amber-500/30 bg-amber-950/20 px-4 py-6 text-center sm:px-6">
