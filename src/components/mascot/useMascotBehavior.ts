@@ -102,18 +102,17 @@ export function useMascotBehavior({ paused, enabled }: Options) {
     const nodes = document.querySelectorAll<HTMLElement>('[data-mascot-anchor="link"]');
     if (nodes.length === 0) return { x: randomTargetX(), linkId: null as string | null };
 
-    const top = getTopLinkIdsForMascot(3);
-    /** 클릭 기록이 있으면 대부분 1→2→3순으로 순환, 가끔 전체 중 랜덤 */
-    const useFavorite =
-      top.length > 0 && Math.random() < 0.88;
+    const top = getTopLinkIdsForMascot(5);
+    /** 클릭 많은 순·기본(ChatGPT·Gemini·힉스필드) 순으로 순환, 가끔 아무 타일 */
+    const useFavorite = Math.random() < 0.9;
 
     let el: HTMLElement | null = null;
     let linkId: string | null = null;
 
-    if (useFavorite) {
+    if (useFavorite && top.length > 0) {
       const i = topVisitCycleRef.current % top.length;
       topVisitCycleRef.current++;
-      const id = top[i].id;
+      const id = top[i]!.id;
       const sel = `[data-mascot-link-id="${escapeAttrSelector(id)}"]`;
       el = document.querySelector<HTMLElement>(sel);
       linkId = id;
@@ -154,8 +153,8 @@ export function useMascotBehavior({ paused, enabled }: Options) {
         const mobile = window.matchMedia("(max-width: 640px)").matches;
         const r = Math.random();
 
-        /* 랜덤 좌우 이동 비중을 줄이고, 링크 근처 이동(자주 클릭한 아이콘 우선) 비중을 높임 */
-        if (r < 0.28) {
+        /* 무작위 좌우는 소수만 — 대부분 인기 링크(클릭 상위 + 기본 GPT·제미나이·힉스필드) 근처 왕복 */
+        if (r < 0.07) {
           const tx = randomTargetX();
           setFacing(tx < xRef.current ? -1 : 1);
           setMode("walk");
@@ -170,7 +169,7 @@ export function useMascotBehavior({ paused, enabled }: Options) {
           continue;
         }
 
-        if (r < 0.9) {
+        if (r < 0.94) {
           const { x: tx, linkId } = pointNearLinkX();
           setFacing(tx < xRef.current ? -1 : 1);
           setMode("walk");

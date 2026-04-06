@@ -207,19 +207,19 @@
         },
         {
           "id": "koot-seven-deadly-sins",
-          "name": "칠대죄_7",
+          "name": "십대죄_7",
           "url": "https://www.youtube.com/watch?v=FgcetSpOGdc",
           "iconUrl": "https://www.google.com/s2/favicons?domain=youtube.com&sz=128"
         },
         {
           "id": "koot-vampire",
-          "name": "뱀피르_",
+          "name": "뱀파이어_",
           "url": "https://www.youtube.com/watch?v=ibNV_MbvZx0",
           "iconUrl": "https://www.google.com/s2/favicons?domain=youtube.com&sz=128"
         },
         {
           "id": "koot-vampire-red",
-          "name": "뱀피르_레드",
+          "name": "뱀파이어_레드",
           "url": "https://www.youtube.com/watch?v=gsYusPqwLx8",
           "iconUrl": "https://www.google.com/s2/favicons?domain=youtube.com&sz=128"
         },
@@ -255,7 +255,7 @@
         },
         {
           "id": "koot-architect",
-          "name": "아키텍트",
+          "name": "아키텍드",
           "url": "https://www.youtube.com/watch?v=UxNvbonI8lg",
           "iconUrl": "https://www.google.com/s2/favicons?domain=youtube.com&sz=128"
         },
@@ -300,32 +300,6 @@
           "name": "블소 사술사",
           "url": "https://www.youtube.com/watch?v=FeB1FUsB1uM",
           "iconUrl": "https://www.google.com/s2/favicons?domain=youtube.com&sz=128"
-        },
-        {
-          "id": "koot-bns-throw",
-          "name": "블소 비도술사",
-          "url": "https://www.youtube.com/watch?v=5KT_2qOHUVw",
-          "iconUrl": "https://www.google.com/s2/favicons?domain=youtube.com&sz=128"
-        },
-        {
-          "id": "6dca904e-78df-453a-8aa9-0d98a2d13b81",
-          "name": "쏠SOL_2",
-          "url": "https://www.youtube.com/watch?v=zXLYcIOoPEQ"
-        },
-        {
-          "id": "0478f520-645d-4e3c-9392-dcedbb92b798",
-          "name": "조선협객전02",
-          "url": "https://www.youtube.com/watch?v=xbYYFXTwbo8"
-        },
-        {
-          "id": "4256c0a7-3001-4637-9723-3e793b9f5467",
-          "name": "블소_비도술사",
-          "url": "https://www.youtube.com/watch?v=f0roLoeZR9Q"
-        },
-        {
-          "id": "5340e752-1fe8-4456-9c14-1eb223a8476f",
-          "name": "발할라서바이벌",
-          "url": "https://www.youtube.com/watch?v=ZXod-0yUYfU"
         }
       ]
     }
