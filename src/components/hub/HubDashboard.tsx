@@ -479,20 +479,58 @@ export function HubDashboard() {
     handleAddCategory(n);
   }
 
+  /**
+   * 같은 구역 내 순서 변경 또는 다른 구역으로 링크 이동(드래그 앤 드롭).
+   */
+  function moveLinkOrdered(
+    sourceCategoryId: string,
+    sourceIndex: number,
+    targetCategoryId: string,
+    targetIndex: number,
+  ) {
+    if (sourceCategoryId === targetCategoryId && sourceIndex === targetIndex) return;
+    persist((base) => {
+      const srcCat = base.categories.find((c) => c.id === sourceCategoryId);
+      const tgtCat = base.categories.find((c) => c.id === targetCategoryId);
+      if (!srcCat || !tgtCat) return base;
+      if (sourceIndex < 0 || sourceIndex >= srcCat.links.length) return base;
+
+      const link = srcCat.links[sourceIndex]!;
+
+      if (sourceCategoryId === targetCategoryId) {
+        const links = [...srcCat.links];
+        if (targetIndex < 0 || targetIndex > links.length) return base;
+        const [item] = links.splice(sourceIndex, 1);
+        let to = targetIndex;
+        if (sourceIndex < to) to--;
+        if (to < 0 || to > links.length) return base;
+        links.splice(to, 0, item);
+        return {
+          ...base,
+          categories: base.categories.map((c) =>
+            c.id === sourceCategoryId ? { ...c, links } : c,
+          ),
+        };
+      }
+
+      const newSrcLinks = srcCat.links.filter((_, i) => i !== sourceIndex);
+      const newTgtLinks = [...tgtCat.links];
+      const insertAt = Math.min(Math.max(0, targetIndex), newTgtLinks.length);
+      newTgtLinks.splice(insertAt, 0, link);
+
+      return {
+        ...base,
+        categories: base.categories.map((c) => {
+          if (c.id === sourceCategoryId) return { ...c, links: newSrcLinks };
+          if (c.id === targetCategoryId) return { ...c, links: newTgtLinks };
+          return c;
+        }),
+      };
+    });
+  }
+
   function moveLink(categoryId: string, fromIndex: number, toIndex: number) {
-    if (fromIndex === toIndex) return;
-    persist((base) => ({
-      ...base,
-      categories: base.categories.map((c) => {
-        if (c.id !== categoryId) return c;
-        const links = [...c.links];
-        if (fromIndex < 0 || fromIndex >= links.length) return c;
-        if (toIndex < 0 || toIndex >= links.length) return c;
-        const [item] = links.splice(fromIndex, 1);
-        links.splice(toIndex, 0, item);
-        return { ...c, links };
-      }),
-    }));
+    moveLinkOrdered(categoryId, fromIndex, categoryId, toIndex);
   }
 
   function moveCategory(categoryId: string, dir: -1 | 1) {
@@ -821,6 +859,7 @@ export function HubDashboard() {
           onEditLink={(link) => openEditService(cat.id, link)}
           onDeleteLink={(linkId) => handleDeleteLink(cat.id, linkId)}
           onMoveLink={(from, to) => moveLink(cat.id, from, to)}
+          onMoveLinkOrdered={moveLinkOrdered}
           onEditCategory={() => {
             setEditingCategory(cat);
             setCategoryModalOpen(true);

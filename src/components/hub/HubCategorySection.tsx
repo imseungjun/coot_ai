@@ -1,11 +1,41 @@
 "use client";
 
 import { useState } from "react";
+import type { DragEvent } from "react";
 import type { HubCategory, HubLink } from "@/lib/hub-types";
 import { isKootCirclePortfolioCategory, isPortfolioVideoCategory } from "@/lib/hub-utils";
 import { KootPortfolioVideoTile } from "./KootPortfolioVideoTile";
 import { LinkTile } from "./LinkTile";
 import { VideoLinkTile } from "./VideoLinkTile";
+
+function parseHubDragPayload(
+  e: DragEvent,
+  fallbackCategoryId: string,
+): { sourceCategoryId: string; sourceIndex: number } | null {
+  /** Chrome 등은 drop 시 `text/plain`만 안정적으로 넘긴다 — JSON 문자열을 둘 다 넣고 plain 우선 */
+  const raw =
+    e.dataTransfer.getData("text/plain") || e.dataTransfer.getData("application/json");
+  if (!raw.trim()) return null;
+  try {
+    const p = JSON.parse(raw) as unknown;
+    if (
+      p &&
+      typeof p === "object" &&
+      "sourceCategoryId" in (p as object) &&
+      "sourceIndex" in (p as object)
+    ) {
+      const sourceCategoryId = String((p as { sourceCategoryId: unknown }).sourceCategoryId);
+      const sourceIndex = Number((p as { sourceIndex: unknown }).sourceIndex);
+      if (!Number.isFinite(sourceIndex)) return null;
+      return { sourceCategoryId, sourceIndex };
+    }
+  } catch {
+    /* 레거시: 인덱스 숫자만 */
+  }
+  const from = Number.parseInt(raw, 10);
+  if (Number.isNaN(from)) return null;
+  return { sourceCategoryId: fallbackCategoryId, sourceIndex: from };
+}
 
 type HubCategorySectionProps = {
   category: HubCategory;
@@ -13,6 +43,13 @@ type HubCategorySectionProps = {
   onEditLink: (link: HubLink) => void;
   onDeleteLink: (linkId: string) => void;
   onMoveLink: (fromIndex: number, toIndex: number) => void;
+  /** 같은 구역·다른 구역 모두: 드래그 소스와 놓는 위치 */
+  onMoveLinkOrdered: (
+    sourceCategoryId: string,
+    sourceIndex: number,
+    targetCategoryId: string,
+    targetIndex: number,
+  ) => void;
   onEditCategory: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
@@ -27,6 +64,7 @@ export function HubCategorySection({
   onEditLink,
   onDeleteLink,
   onMoveLink,
+  onMoveLinkOrdered,
   onEditCategory,
   onMoveUp,
   onMoveDown,
@@ -64,12 +102,15 @@ export function HubCategorySection({
       onDrop={(e) => {
         e.preventDefault();
         e.stopPropagation();
-        const raw = e.dataTransfer.getData("text/plain");
-        const from = Number.parseInt(raw, 10);
+        const payload = parseHubDragPayload(e, category.id);
         setDropTarget(null);
-        if (!Number.isNaN(from) && from !== index) {
-          onMoveLink(from, index);
-        }
+        if (!payload) return;
+        onMoveLinkOrdered(
+          payload.sourceCategoryId,
+          payload.sourceIndex,
+          category.id,
+          index,
+        );
       }}
       className={`relative min-h-0 rounded-2xl transition-shadow ${
         dropTarget === index
@@ -128,7 +169,16 @@ export function HubCategorySection({
         aria-label="링크 순서 변경"
         onDragStart={(e) => {
           e.stopPropagation();
-          e.dataTransfer.setData("text/plain", String(index));
+          const payload = JSON.stringify({
+            sourceCategoryId: category.id,
+            sourceIndex: index,
+          });
+          e.dataTransfer.setData("text/plain", payload);
+          try {
+            e.dataTransfer.setData("application/json", payload);
+          } catch {
+            /* 일부 환경에서 커스텀 MIME 제한 */
+          }
           e.dataTransfer.effectAllowed = "move";
         }}
         onDragEnd={() => setDropTarget(null)}
@@ -143,8 +193,43 @@ export function HubCategorySection({
     </li>
   ));
 
+  const appendIndex = category.links.length;
+
   const addTile = (
-    <li key="__add">
+    <li
+      key="__add"
+      onDragOver={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        e.dataTransfer.dropEffect = "move";
+        setDropTarget(appendIndex);
+      }}
+      onDragLeave={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+          setDropTarget(null);
+        }
+      }}
+      onDrop={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const payload = parseHubDragPayload(e, category.id);
+        setDropTarget(null);
+        if (!payload) return;
+        onMoveLinkOrdered(
+          payload.sourceCategoryId,
+          payload.sourceIndex,
+          category.id,
+          appendIndex,
+        );
+      }}
+      className={`relative min-h-0 rounded-2xl transition-shadow ${
+        dropTarget === appendIndex
+          ? kootCircle
+            ? "ring-2 ring-white/35 ring-offset-2 ring-offset-[#0f0f0f]"
+            : "ring-2 ring-coot-accent/60 ring-offset-2 ring-offset-coot-bg"
+          : ""
+      }`}
+    >
       <button
         type="button"
         onClick={onAdd}
@@ -272,8 +357,9 @@ export function HubCategorySection({
           </>
         ) : (
           <>
-            카드 왼쪽 위 <span className="text-coot-text">≡</span>를 드래그해 순서를 바꾸거나, 카드 오른쪽{" "}
-            <span className="text-coot-text">⋮</span> 메뉴에서 위·아래로 이동할 수 있습니다.
+            카드 왼쪽 위 <span className="text-coot-text">≡</span>를 드래그해 같은 구역 안 순서를 바꾸거나, 다른 구역의 카드 위·또는{" "}
+            <span className="text-coot-text">추가</span> 칸에 놓아 옮길 수 있습니다. 카드 오른쪽{" "}
+            <span className="text-coot-text">⋮</span> 메뉴에서도 위·아래로 이동할 수 있습니다.
           </>
         )}
       </p>
