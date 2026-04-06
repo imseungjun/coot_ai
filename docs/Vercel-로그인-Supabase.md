@@ -1,5 +1,14 @@
 # Vercel 배포 후 로그인(Supabase) 설정
 
+## 브라우저 주소창에 뭘 써야 하나요? (404가 날 때)
+
+- **문서에 나온 `본인-프로젝트`, `coot-ai-xxxx`, `xxxx` 같은 글자는 예시입니다.**  
+  특히 **`coot-ai-xxxx` 를 그대로 주소창에 넣으면 안 됩니다.** 실제 도메인이 아닙니다.
+- 주소 끝의 **`/**` 는 Supabase「Redirect URLs」목록에만 넣는 패턴**이고, **브라우저에는 넣지 마세요.**
+- **실제 주소는 반드시** [Vercel 대시보드](https://vercel.com/dashboard) → 프로젝트(`coot_ai` 등) 클릭 → **Visit** 또는 **Settings → Domains** 에서 **복사**합니다.  
+  프로젝트마다 `https://…vercel.app` 가운데 이름이 **다릅니다.** (문서에 적어 둔 예시 URL을 따라 쓰지 마세요.)
+- 더 자세한 오류 대응: [Vercel-404-해결.md](./Vercel-404-해결.md)
+
 이 앱의 로그인·회원가입은 **Supabase Auth**를 사용합니다.  
 Vercel에는 **비밀 값을 직접 넣어야** 하며, [Supabase 대시보드](https://supabase.com/dashboard)에서 **허용 URL**도 맞춰야 합니다.
 
@@ -24,9 +33,9 @@ Vercel에는 **비밀 값을 직접 넣어야** 하며, [Supabase 대시보드](
 
 | Key | Value | 비고 |
 |-----|--------|------|
-| `NEXT_PUBLIC_SUPABASE_URL` | `https://xxxx.supabase.co` | Supabase Project URL 그대로 |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `eyJ...` (anon public) | 공개용 anon 키 (서비스 롤 키 넣지 마세요) |
-| `NEXT_PUBLIC_SITE_URL` | `https://여기에-배포주소.vercel.app` | **끝에 `/` 없이** |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase **Project URL** (대시보드에서 복사) | 예: `https://xxxxx.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | **anon public** 키 | 공개용 anon 키 (서비스 롤 키 넣지 마세요) |
+| `NEXT_PUBLIC_SITE_URL` | Vercel **Domains**에 보이는 프로덕션 URL 전체 (대시보드에서 복사) | **끝에 `/` 없이** · 문서 예시 문자열 넣지 말 것 |
 
 - **Production**, **Preview**, **Development** 모두에 넣어두면 미리보기 URL에서도 테스트하기 쉽습니다.
 - 값을 저장한 뒤 **Redeploy** 가 필요합니다. (Deployments → 해당 배포의 ⋮ → Redeploy)
@@ -37,23 +46,21 @@ Vercel에는 **비밀 값을 직접 넣어야** 하며, [Supabase 대시보드](
 
 ## 3) Supabase에 Vercel 주소 허용 (필수)
 
-배포가 끝나면 **실제 사이트 주소**가 정해짩니다. 예:
-
-- `https://coot-ai-xxxxx.vercel.app`
+배포가 끝나면 Vercel **Domains**에 **실제 사이트 주소**가 표시됩니다. 문서에 있던 예시 도메인을 따라 쓰지 마세요.
 
 Supabase 대시보드:
 
 1. **Authentication → URL Configuration**
 2. **Site URL**  
-   - 프로덕션 하나만 쓸 때: `https://coot-ai-xxxxx.vercel.app`
-3. **Redirect URLs** 에 다음을 추가 (각 줄 하나씩):
+   - Vercel에서 복사한 프로덕션 `https://…vercel.app` (끝 `/` 없이)
+3. **Redirect URLs** 에 다음을 추가 (각 줄 하나씩). **여기만** 끝에 `/**` 를 붙입니다. (브라우저 주소 아님)
 
 ```text
 http://localhost:3000/**
-https://coot-ai-xxxxx.vercel.app/**
+https://(Vercel-Domains에-보이는-호스트명).vercel.app/**
 ```
 
-- `coot-ai-xxxxx` 는 본인 Vercel 주소로 바꿉니다.
+- 괄호 부분은 **Vercel → Settings → Domains** 에 적힌 `…vercel.app` 앞의 한 덩어리와 동일하게 넣습니다. (직접 복사해 조합하는 것이 안전합니다.)
 - Preview 배포(미리보기 URL)도 쓰려면 Vercel이 주는 `*.vercel.app` 형태를 추가할 수 있습니다. (보안 정책에 맞게 필요한 만큼만 추가)
 
 이메일 인증 링크·비밀번호 재설정 링크가 이 목록에 없으면 **로그인/콜백이 막힐 수 있습니다.**
